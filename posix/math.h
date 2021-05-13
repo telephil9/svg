@@ -1,0 +1,11 @@
+float cosf(float);
+float sinf(float);
+float tanf(float);
+float atanf(float);
+float atan2f(float, float);
+float fabsf(float);
+float sqrtf(float);
+float acosf(float);
+float floorf(float);
+float ceilf(float);
+float fmodf(float, float);

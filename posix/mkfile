@@ -1,0 +1,26 @@
+</$objtype/mkfile
+
+LIB=libposix.$O.a
+OFILES=\
+	e_acosf.$O\
+	e_rem_pio2f.$O\
+	e_sqrtf.$O\
+	k_cosf.$O\
+	k_rem_pio2f.$O\
+	k_sinf.$O\
+	k_tanf.$O\
+	s_copysignf.$O\
+	s_cosf.$O\
+	s_fabsf.$O\
+	s_scalbnf.$O\
+	s_sinf.$O\
+	s_tanf.$O\
+	s_floorf.$O\
+	s_ceilf.$O\
+	e_fmodf.$O\
+	e_atan2f.$O\
+	s_atanf.$O
+
+HFILES=stdlib.h string.h math.h math_private.h 
+
+</sys/src/cmd/mklib
