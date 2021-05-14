@@ -14,21 +14,33 @@ char* filename;
 Image *svg;
 
 void
-rasterize(void)
+rasterize(int scale)
 {
 	NSVGimage *image;
 	struct NSVGrasterizer *rast;
 	uchar *data;
 	int w, h;
+	float s;
+	Rectangle r;
 
 	image = nsvgParseFromFile(filename, "px", 96);
 	if(image==nil)
 		sysfatal("svg parse: %r");
 	w = image->width;
 	h = image->height;
+	s = 1.0f;
+	if(scale){
+		r = insetrect(screen->r, 10);
+		w = Dx(r);
+		h = Dy(r);
+		if(w < h)
+			s = (float)w/image->width;
+		else
+			s = (float)h/image->height;
+	}
 	rast = nsvgCreateRasterizer();
 	data = malloc(w*h*4);
-	nsvgRasterize(rast, image, 0, 0, 1, data, w, h, w*4);
+	nsvgRasterize(rast, image, 0, 0, s, data, w, h, w*4);
 	nsvgDelete(image);
 	nsvgDeleteRasterizer(rast);
 	svg = allocimage(display, Rect(0, 0, w, h), ABGR32, 0, DNofill);
@@ -42,6 +54,8 @@ eresized(int new)
 
 	if(new && getwindow(display, Refnone)<0)
 		sysfatal("cannot reattach: %r");
+	freeimage(svg);
+	rasterize(1);
 	p.x = (Dx(screen->r) - Dx(svg->r))/2;
 	p.y = (Dy(screen->r) - Dy(svg->r))/2;
 	draw(screen, screen->r, display->white, nil, ZP);
@@ -76,8 +90,8 @@ main(int argc, char *argv[])
 	filename = *argv;
 	if(initdraw(nil, nil, "svg")<0)
 		sysfatal("initdraw: %r");
-	rasterize();
 	if(nineflag){
+		rasterize(0);
 		writeimage(1, svg, 0);
 		freeimage(svg);
 		exits(nil);
