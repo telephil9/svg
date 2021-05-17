@@ -17,10 +17,10 @@ void
 rasterize(int scale)
 {
 	NSVGimage *image;
-	struct NSVGrasterizer *rast;
+	NSVGrasterizer *rast;
 	uchar *data;
-	int w, h;
-	float s;
+	int w, h, sz;
+	float s, sx, sy, tx, ty;
 	Rectangle r;
 
 	image = nsvgParseFromFile(filename, "px", 96);
@@ -33,18 +33,25 @@ rasterize(int scale)
 		r = insetrect(screen->r, 10);
 		w = Dx(r);
 		h = Dy(r);
-		if(w < h)
-			s = (float)w/image->width;
-		else
-			s = (float)h/image->height;
+		sx = (float)w/(image->width+0.5);
+		sy = (float)h/(image->height+0.5);
+		s = (sx < sy) ? sx : sy;
 	}
 	rast = nsvgCreateRasterizer();
-	data = malloc(w*h*4);
+	if(rast==nil)
+		sysfatal("create rasterizer: %r");
+	sz = w*h*4;
+	data = malloc(sz);
+	if(data==nil)
+		sysfatal("malloc: %r");
 	nsvgRasterize(rast, image, 0, 0, s, data, w, h, w*4);
 	nsvgDelete(image);
 	nsvgDeleteRasterizer(rast);
 	svg = allocimage(display, Rect(0, 0, w, h), ABGR32, 0, DNofill);
-	loadimage(svg, svg->r, data, w*h*4);
+	if(svg==nil)
+		sysfatal("allocimage: %r");
+	if(loadimage(svg, svg->r, data, sz)<sz)
+		sysfatal("loadimage: %r");
 }
 
 void
