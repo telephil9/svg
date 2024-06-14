@@ -12,14 +12,14 @@
 
 char* filename;
 Image *svg;
+int nineflag, w, h, sz;
+uchar *data;
 
 void
 rasterize(int scale)
 {
 	NSVGimage *image;
 	NSVGrasterizer *rast;
-	uchar *data;
-	int w, h, sz;
 	float s, sx, sy, tx, ty;
 	Rectangle r;
 
@@ -47,6 +47,8 @@ rasterize(int scale)
 	nsvgRasterize(rast, image, 0, 0, s, data, w, h, w*4);
 	nsvgDelete(image);
 	nsvgDeleteRasterizer(rast);
+	if(nineflag)
+		return;
 	svg = allocimage(display, Rect(0, 0, w, h), ABGR32, 0, DNofill);
 	if(svg==nil)
 		sysfatal("allocimage: %r");
@@ -72,16 +74,19 @@ eresized(int new)
 void
 usage(void)
 {
-	fprint(2, "usage: %s [-9] file.svg\n", argv0);
+	fprint(2, "usage: %s [-9] [file.svg]\n", argv0);
 }
 
 void
 main(int argc, char *argv[])
 {
 	Event e;
-	int ev, nineflag;
+	int ev;
+	char buf[12+1];
 
 	ARGBEGIN{
+	case 't':	/* page compatibility */
+		break;
 	case '9':
 		nineflag++;
 		break;
@@ -90,19 +95,20 @@ main(int argc, char *argv[])
 		usage();
 		exits("usage");
 	}ARGEND
-	if(*argv==nil){
-		usage();
-		exits("usage");
-	}
-	filename = *argv;
-	if(initdraw(nil, nil, "svg")<0)
-		sysfatal("initdraw: %r");
+	if(*argv==nil)
+		filename = "/fd/0";
+	else
+		filename = *argv;
 	if(nineflag){
 		rasterize(0);
-		writeimage(1, svg, 0);
-		freeimage(svg);
+		chantostr(buf, ABGR32);
+		print("%11s %11d %11d %11d %11d ", buf, 0, 0, w, h);
+		if(write(1, data, sz) != sz)
+			sysfatal("write: %r\n");
 		exits(nil);
 	}
+	if(initdraw(nil, nil, "svg")<0)
+		sysfatal("initdraw: %r");
 	einit(Emouse|Ekeyboard);
 	eresized(0);
 	for(;;){
